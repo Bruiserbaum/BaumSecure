@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+*.user
+
+# VS files
+.vs/
+*.suo
+*.db
+*.opendb
+
+# Publish output
+publish/
+
+# OS
+.DS_Store
+Thumbs.db
