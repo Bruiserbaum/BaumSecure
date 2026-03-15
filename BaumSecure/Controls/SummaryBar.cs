@@ -35,14 +35,15 @@ public sealed class SummaryBar : Control
         using var bg = new SolidBrush(AppTheme.BgDark);
         g.FillRectangle(bg, rc);
 
-        if (_result == null) return;
+        // Always render all 4 tiles; dimmed when no scan has run yet
+        bool hasScan = _result != null;
 
         var items = new[]
         {
-            ("CRITICAL", _result.CriticalCount, AppTheme.Critical),
-            ("HIGH",     _result.HighCount,     AppTheme.High),
-            ("MEDIUM",   _result.MediumCount,   AppTheme.Medium),
-            ("LOW",      _result.LowCount,       AppTheme.Low),
+            ("CRITICAL", _result?.CriticalCount ?? 0, AppTheme.Critical),
+            ("HIGH",     _result?.HighCount     ?? 0, AppTheme.High),
+            ("MEDIUM",   _result?.MediumCount   ?? 0, AppTheme.Medium),
+            ("LOW",      _result?.LowCount      ?? 0, AppTheme.Low),
         };
 
         int tileW = rc.Width / items.Length;
@@ -51,19 +52,28 @@ public sealed class SummaryBar : Control
 
         foreach (var (label, count, color) in items)
         {
+            bool active = hasScan && count > 0;
+
+            // Tile bg/border: brighter when active, very dim before any scan
+            int bgAlpha     = active ? 40 : (hasScan ? 15 : 10);
+            int borderAlpha = active ? 100 : (hasScan ? 40 : 25);
+
             var tile = new Rectangle(x + 4, 4, tileW - 8, rc.Height - 8);
-            using var tileBg = new SolidBrush(Color.FromArgb(30, color));
+            using var tileBg = new SolidBrush(Color.FromArgb(bgAlpha, color));
             g.FillRectangle(tileBg, tile);
-            using var tileBorder = new Pen(Color.FromArgb(80, color));
+            using var tileBorder = new Pen(Color.FromArgb(borderAlpha, color));
             g.DrawRectangle(tileBorder, tile);
 
-            // Count number
-            using var countBrush = new SolidBrush(count > 0 ? color : AppTheme.TextMuted);
+            // Count: bright when active, muted otherwise
+            var countColor = active ? color : Color.FromArgb(hasScan ? 70 : 45, AppTheme.TextMuted);
+            using var countBrush = new SolidBrush(countColor);
             var countRect = new Rectangle(x + 4, 4, tileW - 8, 36);
-            g.DrawString(count.ToString(), AppTheme.FontTitle, countBrush, countRect, sfC);
+            string countText = hasScan ? count.ToString() : "—";
+            g.DrawString(countText, AppTheme.FontTitle, countBrush, countRect, sfC);
 
             // Label
-            using var labelBrush = new SolidBrush(AppTheme.TextMuted);
+            int labelAlpha = active ? 180 : (hasScan ? 100 : 60);
+            using var labelBrush = new SolidBrush(Color.FromArgb(labelAlpha, AppTheme.TextMuted));
             var labelRect = new Rectangle(x + 4, 38, tileW - 8, 22);
             g.DrawString(label, AppTheme.FontSmall, labelBrush, labelRect, sfC);
 

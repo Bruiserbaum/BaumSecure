@@ -15,14 +15,15 @@ public sealed class MainForm : Form
     private readonly ComboBox   _profileBox;
     private readonly Button     _scanBtn;
     private readonly Button     _cancelBtn;
-    private readonly ProgressBar _progress;
-    private readonly Label      _statusLabel;
+    private readonly Panel      _progressPanel;
     private readonly SummaryBar _summaryBar;
     private readonly Panel      _findingsScroll;
     private readonly Label      _externalIpLabel;
     private readonly CheckBox   _showClosedChk;
 
     private ScanResult? _lastResult;
+    private int    _progressValue;
+    private string _statusText = "";
 
     public MainForm()
     {
@@ -33,6 +34,11 @@ public sealed class MainForm : Form
         ForeColor       = AppTheme.TextPrim;
         Font            = AppTheme.FontBody;
         StartPosition   = FormStartPosition.CenterScreen;
+
+        // App icon (embedded in exe via <ApplicationIcon>)
+        using var iconStream = typeof(MainForm).Assembly
+            .GetManifestResourceStream("BaumSecure.Resources.app.ico");
+        if (iconStream != null) Icon = new Icon(iconStream);
 
         // ── Header ─────────────────────────────────────────────────────────────
         var header = new Panel
@@ -122,25 +128,9 @@ public sealed class MainForm : Form
         Controls.Add(configBar);
 
         // ── Progress bar ───────────────────────────────────────────────────────
-        var progressPanel = new Panel { Dock = DockStyle.Top, Height = 28, BackColor = AppTheme.BgDark, Padding = new Padding(12, 6, 12, 0) };
-        _progress = new ProgressBar
-        {
-            Dock    = DockStyle.Fill,
-            Style   = ProgressBarStyle.Continuous,
-            Minimum = 0,
-            Maximum = 100,
-            Value   = 0,
-        };
-        _statusLabel = new Label
-        {
-            Dock      = DockStyle.Right,
-            Width     = 280,
-            ForeColor = AppTheme.TextMuted,
-            TextAlign = ContentAlignment.MiddleRight,
-            Font      = AppTheme.FontSmall,
-        };
-        progressPanel.Controls.AddRange([_progress, _statusLabel]);
-        Controls.Add(progressPanel);
+        _progressPanel = new Panel { Dock = DockStyle.Top, Height = 36, BackColor = AppTheme.BgDark };
+        _progressPanel.Paint += OnProgressPanelPaint;
+        Controls.Add(_progressPanel);
 
         // ── Summary bar ────────────────────────────────────────────────────────
         _summaryBar = new SummaryBar { Dock = DockStyle.Top };
@@ -188,12 +178,11 @@ public sealed class MainForm : Form
         if (string.IsNullOrEmpty(ip)) { MessageBox.Show("Enter a target IP.", "BaumSecure", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
         _cts = new CancellationTokenSource();
-        _scanBtn.Enabled   = false;
+        _scanBtn.Enabled = false;
         _cancelBtn.Visible = true;
-        _progress.Value    = 0;
+        SetProgress(0, "Starting scan…");
         _summaryBar.Clear();
         _findingsScroll.Controls.Clear();
-        _statusLabel.Text  = "Starting scan…";
 
         var profile = _profileBox.SelectedIndex switch
         {
@@ -208,12 +197,11 @@ public sealed class MainForm : Form
             _lastResult = result;
             _summaryBar.SetResult(result);
             RebuildFindingsList(result);
-            _statusLabel.Text = $"Done — {result.OpenCount} open / {result.PortsChecked} checked  ({result.Duration.TotalSeconds:F1}s)";
-            _progress.Value   = 100;
+            SetProgress(100, $"Done — {result.OpenCount} open / {result.PortsChecked} checked  ({result.Duration.TotalSeconds:F1}s)");
         }
         catch (OperationCanceledException)
         {
-            _statusLabel.Text = "Scan cancelled.";
+            SetProgress(0, "Scan cancelled.");
         }
         finally
         {
@@ -231,10 +219,10 @@ public sealed class MainForm : Form
         if (IsDisposed) return;
         Invoke(() =>
         {
-            _progress.Value   = args.Percent;
-            _statusLabel.Text = $"Checked {args.Completed} / {args.Total}…";
+            string status = $"Checked {args.Completed} / {args.Total}…";
             if (args.Latest is { IsOpen: true } f)
-                _statusLabel.Text += $"  ⚠ {f.Port} open";
+                status += $"  ⚠ {f.Port} open";
+            SetProgress(args.Percent, status);
         });
     }
 
@@ -300,6 +288,50 @@ public sealed class MainForm : Form
         int w = _findingsScroll.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
         foreach (FindingRow row in _findingsScroll.Controls.OfType<FindingRow>())
             row.Width = w;
+    }
+
+    // ── Progress helpers ───────────────────────────────────────────────────────
+    private void SetProgress(int value, string status)
+    {
+        _progressValue = value;
+        _statusText    = status;
+        _progressPanel.Invalidate();
+    }
+
+    private void OnProgressPanelPaint(object? sender, PaintEventArgs e)
+    {
+        var g   = e.Graphics;
+        var rc  = _progressPanel.ClientRectangle;
+        const int padX = 16;
+        const int barH = 8;
+        int barY = (rc.Height - barH) / 2;
+        int barW = rc.Width - padX * 2;
+
+        // Track (dark grey)
+        using var trackBrush = new SolidBrush(Color.FromArgb(40, 44, 55));
+        g.FillRectangle(trackBrush, padX, barY, barW, barH);
+
+        // Fill (blue)
+        if (_progressValue > 0)
+        {
+            int fillW = (int)(barW * _progressValue / 100.0);
+            using var fillBrush = new SolidBrush(AppTheme.Accent);
+            g.FillRectangle(fillBrush, padX, barY, fillW, barH);
+        }
+
+        // Status text (right-aligned, vertically centred)
+        if (!string.IsNullOrEmpty(_statusText))
+        {
+            var sf = new StringFormat
+            {
+                Alignment     = StringAlignment.Far,
+                LineAlignment = StringAlignment.Center,
+                Trimming      = StringTrimming.EllipsisCharacter,
+            };
+            using var textBrush = new SolidBrush(AppTheme.TextMuted);
+            g.DrawString(_statusText, AppTheme.FontSmall, textBrush,
+                new RectangleF(padX, 0, barW, rc.Height), sf);
+        }
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
