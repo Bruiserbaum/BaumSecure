@@ -1,6 +1,6 @@
 #define AppName      "BaumSecure"
-#define AppVersion   "1.0.1"
-#define AppVersionFull "1.0.1"
+#define AppVersion   "1.0.2"
+#define AppVersionFull "1.0.2"
 #define AppPublisher "Bnuss"
 #define AppExeName   "BaumSecure.exe"
 #define PublishDir   "..\BaumSecure\bin\Release\net8.0-windows10.0.22621.0\win-x64\publish"
@@ -30,7 +30,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Files]
-Source: "{#PublishDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace uninsrestartdelete
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion restartreplace uninsrestartdelete
 
 [Icons]
 Name: "{group}\{#AppName}";           Filename: "{app}\{#AppExeName}"
