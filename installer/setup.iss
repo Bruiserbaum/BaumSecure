@@ -1,6 +1,6 @@
 #define AppName      "BaumSecure"
-#define AppVersion   "1.0.5"
-#define AppVersionFull "1.0.5"
+#define AppVersion   "1.0.6"
+#define AppVersionFull "1.0.6"
 #define AppPublisher "Bnuss"
 #define AppExeName   "BaumSecure.exe"
 #define PublishDir   "..\BaumSecure\bin\Release\net8.0-windows10.0.22621.0\win-x64\publish"

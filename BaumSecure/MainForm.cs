@@ -128,7 +128,7 @@ public sealed class MainForm : Form
         Controls.Add(configBar);
 
         // ── Progress bar ───────────────────────────────────────────────────────
-        _progressPanel = new Panel { Dock = DockStyle.Top, Height = 36, BackColor = AppTheme.BgDark };
+        _progressPanel = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = AppTheme.BgDark };
         _progressPanel.Paint += OnProgressPanelPaint;
         Controls.Add(_progressPanel);
 
@@ -237,7 +237,7 @@ public sealed class MainForm : Form
             : result.Findings.Where(f => f.IsOpen).ToList();
 
         int y = 0;
-        int w = _findingsScroll.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+        int w = _findingsScroll.ClientSize.Width;
 
         foreach (var finding in findings)
         {
@@ -266,7 +266,7 @@ public sealed class MainForm : Form
         {
             var empty = new Label
             {
-                Text      = findings.Count == 0 && result.OpenCount == 0
+                Text      = result.OpenCount == 0
                     ? "No open ports detected — your external surface looks clean."
                     : "No findings to display. Enable 'Show closed ports' to see all checked ports.",
                 AutoSize  = false,
@@ -285,7 +285,7 @@ public sealed class MainForm : Form
     {
         base.OnResize(e);
         if (_findingsScroll == null) return;
-        int w = _findingsScroll.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+        int w = _findingsScroll.ClientSize.Width;
         foreach (FindingRow row in _findingsScroll.Controls.OfType<FindingRow>())
             row.Width = w;
     }
@@ -304,7 +304,7 @@ public sealed class MainForm : Form
         var rc  = _progressPanel.ClientRectangle;
         const int padX = 16;
         const int barH = 8;
-        int barY = (rc.Height - barH) / 2;
+        const int barY = 10;          // bar sits near the top of the panel
         int barW = rc.Width - padX * 2;
 
         // Track (dark grey)
@@ -319,18 +319,18 @@ public sealed class MainForm : Form
             g.FillRectangle(fillBrush, padX, barY, fillW, barH);
         }
 
-        // Status text (right-aligned, vertically centred)
+        // Status text on its own row below the bar
         if (!string.IsNullOrEmpty(_statusText))
         {
             var sf = new StringFormat
             {
                 Alignment     = StringAlignment.Far,
-                LineAlignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Near,
                 Trimming      = StringTrimming.EllipsisCharacter,
             };
             using var textBrush = new SolidBrush(AppTheme.TextMuted);
             g.DrawString(_statusText, AppTheme.FontSmall, textBrush,
-                new RectangleF(padX, 0, barW, rc.Height), sf);
+                new RectangleF(padX, barY + barH + 4, barW, 16), sf);
         }
     }
 
