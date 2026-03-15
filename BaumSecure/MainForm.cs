@@ -97,7 +97,7 @@ public sealed class MainForm : Form
             ForeColor     = AppTheme.TextPrim,
             FlatStyle     = FlatStyle.Flat,
         };
-        _profileBox.Items.AddRange(["Quick (critical + high)", "Full (all rules)"]);
+        _profileBox.Items.AddRange(["Quick (critical + high)", "Full (all rules)", "Deep (500 ports)"]);
         _profileBox.SelectedIndex = 0;
 
         _showClosedChk = new CheckBox
@@ -195,7 +195,12 @@ public sealed class MainForm : Form
         _findingsScroll.Controls.Clear();
         _statusLabel.Text  = "Starting scan…";
 
-        var profile = _profileBox.SelectedIndex == 0 ? ScanProfile.Quick : ScanProfile.Full;
+        var profile = _profileBox.SelectedIndex switch
+        {
+            0 => ScanProfile.Quick,
+            2 => ScanProfile.Deep,
+            _ => ScanProfile.Full,
+        };
 
         try
         {

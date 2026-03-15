@@ -1,7 +1,7 @@
 namespace BaumSecure.Models;
 
 public enum Severity { Critical, High, Medium, Low, Info }
-public enum ScanProfile { Quick, Full, Custom }
+public enum ScanProfile { Quick, Full, Deep, Custom }
 
 public sealed record SecurityRule(
     int         Port,
