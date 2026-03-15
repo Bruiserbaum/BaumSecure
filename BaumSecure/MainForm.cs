@@ -291,6 +291,7 @@ public sealed class MainForm : Form
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
+        if (_findingsScroll == null) return;
         int w = _findingsScroll.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
         foreach (FindingRow row in _findingsScroll.Controls.OfType<FindingRow>())
             row.Width = w;
