@@ -1,6 +1,6 @@
 #define AppName      "BaumSecure"
-#define AppVersion   "1.0.6"
-#define AppVersionFull "1.0.6"
+#define AppVersion   "1.0.7"
+#define AppVersionFull "1.0.7"
 #define AppPublisher "Bnuss"
 #define AppExeName   "BaumSecure.exe"
 #define PublishDir   "..\BaumSecure\bin\Release\net8.0-windows10.0.22621.0\win-x64\publish"
@@ -22,6 +22,8 @@ CloseApplications=yes
 MinVersion=10.0.22621
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
+SetupIconFile=..\BaumSecure\Resources\app.ico
+UninstallDisplayIcon={app}\{#AppExeName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
