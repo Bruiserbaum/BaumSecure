@@ -1,8 +1,14 @@
-﻿# BaumSecure
+# BaumSecure
 
-A Windows desktop app that analyzes your home lab's external attack surface â€” scanning for open ports and flagging common security misconfigurations.
+A Windows desktop app that analyzes your home lab's external attack surface — scanning for open ports and flagging common security misconfigurations.
 
 Point it at your external IP and get an instant, prioritized list of what the internet can see and why it matters.
+
+---
+
+## Screenshot
+
+![BaumSecure](docs/screenshots/preview.png)
 
 ---
 
@@ -30,30 +36,24 @@ Each finding includes:
 
 ---
 
-## Screenshots
-
-> Coming soon
-
----
-
 ## Requirements
 
 - Windows 10 22621+ (Windows 11 recommended)
 - .NET 8 Runtime ([download](https://dotnet.microsoft.com/download/dotnet/8.0))
 
-No admin privileges required. No external tools (nmap, etc.) needed â€” BaumSecure uses pure .NET TCP connect scanning.
+No admin privileges required. No external tools (nmap, etc.) needed — BaumSecure uses pure .NET TCP connect scanning.
 
 ---
 
 ## Usage
 
-1. Launch BaumSecure â€” it auto-detects your external IP via [ipify.org](https://api.ipify.org)
+1. Launch BaumSecure — it auto-detects your external IP via [ipify.org](https://api.ipify.org)
 2. Confirm or replace the target IP
 3. Choose a scan profile:
-   - **Quick** â€” checks Critical and High severity ports only (~20 ports, fast)
-   - **Full** â€” checks all rules (~35 ports)
+   - **Quick** — checks Critical and High severity ports only (~20 ports, fast)
+   - **Full** — checks all rules (~35 ports)
 4. Click **Scan**
-5. Review findings â€” click any row to expand the description and remediation advice
+5. Review findings — click any row to expand the description and remediation advice
 
 ---
 
@@ -76,13 +76,13 @@ new SecurityRule(
     Protocol:       "TCP",
     ServiceName:    "Redis",
     Severity:       Severity.Critical,
-    Title:          "Redis exposed â€” typically unauthenticated",
+    Title:          "Redis exposed — typically unauthenticated",
     Description:    "Redis defaults to no authentication...",
     Recommendation: "Bind Redis to 127.0.0.1 only..."
 )
 ```
 
-Adding new rules is straightforward â€” extend the list in `SecurityAnalyzer.cs`.
+Adding new rules is straightforward — extend the list in `SecurityAnalyzer.cs`.
 
 ---
 
@@ -102,19 +102,19 @@ dotnet run --project BaumSecure/BaumSecure.csproj
 
 ```
 BaumSecure/
-â”œâ”€â”€ Models/
-â”‚   â”œâ”€â”€ SecurityRule.cs      # Rule definition + Severity enum
-â”‚   â”œâ”€â”€ SecurityFinding.cs   # Rule + scan result (open/closed + banner)
-â”‚   â””â”€â”€ ScanResult.cs        # Full scan output with aggregated counts
-â”œâ”€â”€ Services/
-â”‚   â”œâ”€â”€ ExternalIpService.cs # Detects WAN IP via ipify/ifconfig.me/icanhazip
-â”‚   â”œâ”€â”€ PortScanService.cs   # Async concurrent TCP connect scanner + banner grab
-â”‚   â””â”€â”€ SecurityAnalyzer.cs  # Rule database + profile definitions
-â”œâ”€â”€ Controls/
-â”‚   â”œâ”€â”€ FindingRow.cs        # Owner-drawn expandable finding row
-â”‚   â””â”€â”€ SummaryBar.cs        # Critical/High/Medium/Low count tiles
-â”œâ”€â”€ AppTheme.cs              # Dark theme colours, fonts, dark scrollbar helper
-â””â”€â”€ MainForm.cs              # Main window â€” config, progress, findings list
+├── Models/
+│   ├── SecurityRule.cs      # Rule definition + Severity enum
+│   ├── SecurityFinding.cs   # Rule + scan result (open/closed + banner)
+│   └── ScanResult.cs        # Full scan output with aggregated counts
+├── Services/
+│   ├── ExternalIpService.cs # Detects WAN IP via ipify/ifconfig.me/icanhazip
+│   ├── PortScanService.cs   # Async concurrent TCP connect scanner + banner grab
+│   └── SecurityAnalyzer.cs  # Rule database + profile definitions
+├── Controls/
+│   ├── FindingRow.cs        # Owner-drawn expandable finding row
+│   └── SummaryBar.cs        # Critical/High/Medium/Low count tiles
+├── AppTheme.cs              # Dark theme colours, fonts, dark scrollbar helper
+└── MainForm.cs              # Main window — config, progress, findings list
 ```
 
 The scanner uses async/await with a `SemaphoreSlim` to run up to 64 TCP probes concurrently. Results stream back to the UI via an event as each port completes, so you see findings appear in real time.
@@ -123,15 +123,9 @@ The scanner uses async/await with a `SemaphoreSlim` to run up to 64 TCP probes c
 
 ## Limitations
 
-- **TCP only** â€” UDP services (SNMP port 161, DNS port 53, NTP port 123, UPnP/SSDP port 1900) cannot be probed with a simple TCP connect. UDP findings are noted in the rule library for awareness but are not actively scanned.
-- **Hairpin NAT** â€” scanning your own external IP from inside your network requires your router to support NAT hairpinning (loopback). Most modern routers do; some do not. If results seem wrong, verify from an external vantage point.
-- **Firewalls** â€” some ISPs silently drop certain inbound ports regardless of your router config. An "open" result confirms the port is reachable; a "closed" result means it was not reachable from this scan, not necessarily that the service doesn't exist.
-
----
-
-## License
-
-Personal use. Not currently open for contributions.
+- **TCP only** — UDP services (SNMP port 161, DNS port 53, NTP port 123, UPnP/SSDP port 1900) cannot be probed with a simple TCP connect. UDP findings are noted in the rule library for awareness but are not actively scanned.
+- **Hairpin NAT** — scanning your own external IP from inside your network requires your router to support NAT hairpinning (loopback). Most modern routers do; some do not. If results seem wrong, verify from an external vantage point.
+- **Firewalls** — some ISPs silently drop certain inbound ports regardless of your router config. An "open" result confirms the port is reachable; a "closed" result means it was not reachable from this scan, not necessarily that the service doesn't exist.
 
 ---
 
